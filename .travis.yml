@@ -1,0 +1,23 @@
+sudo: required
+services: 
+  - docker
+
+before_install:
+  - docker build -t dyke2010/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run dyke2010/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t dyke2010/multi-client ./client
+  - docker build -t dyke2010/multi-nginx ./nginx
+  - docker build -t dyke2010/multi-server ./server
+  - docker build -t dyke2010/multi-worker ./worker
+  # Login to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push to docker hub
+  - docker push dyke2010/multi-client
+  - docker push dyke2010/multi-nginx
+  - docker push dyke2010/multi-server
+  - docker push dyke2010/multi-worker
+
